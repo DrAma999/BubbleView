@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		65211D7A1B2DED7100B326A4 /* BubbleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65211D791B2DED7100B326A4 /* BubbleView.swift */; };
 		65FD6FBA1B2ACF9000D09CCB /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65FD6FB91B2ACF9000D09CCB /* AppDelegate.swift */; };
 		65FD6FBC1B2ACF9000D09CCB /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65FD6FBB1B2ACF9000D09CCB /* ViewController.swift */; };
 		65FD6FBF1B2ACF9000D09CCB /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 65FD6FBD1B2ACF9000D09CCB /* Main.storyboard */; };
@@ -26,6 +27,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		65211D791B2DED7100B326A4 /* BubbleView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BubbleView.swift; sourceTree = "<group>"; };
 		65FD6FB41B2ACF9000D09CCB /* BubbleView.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BubbleView.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		65FD6FB81B2ACF9000D09CCB /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		65FD6FB91B2ACF9000D09CCB /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -77,6 +79,7 @@
 		65FD6FB61B2ACF9000D09CCB /* BubbleView */ = {
 			isa = PBXGroup;
 			children = (
+				65211D791B2DED7100B326A4 /* BubbleView.swift */,
 				65FD6FB91B2ACF9000D09CCB /* AppDelegate.swift */,
 				65FD6FBB1B2ACF9000D09CCB /* ViewController.swift */,
 				65FD6FBD1B2ACF9000D09CCB /* Main.storyboard */,
@@ -213,6 +216,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				65FD6FBC1B2ACF9000D09CCB /* ViewController.swift in Sources */,
+				65211D7A1B2DED7100B326A4 /* BubbleView.swift in Sources */,
 				65FD6FBA1B2ACF9000D09CCB /* AppDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -409,6 +413,7 @@
 				65FD6FD51B2ACF9000D09CCB /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		65FD6FD61B2ACF9000D09CCB /* Build configuration list for PBXNativeTarget "BubbleViewTests" */ = {
 			isa = XCConfigurationList;
@@ -417,6 +422,7 @@
 				65FD6FD81B2ACF9000D09CCB /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
