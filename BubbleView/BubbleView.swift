@@ -9,17 +9,26 @@
 import UIKit
 let viewSize = 10
 let tagDelta = 555
+let borderOffSet:CGFloat = 10.0
 
 class BubbleView: UIView {
     
     var viewFillColor = UIColor.yellowColor()
     var viewBorderColor = UIColor.clearColor()
     var viewBorderWidth: CGFloat?
+    var debugMode = false
     
+    var radius: CGFloat {
+        return CGFloat(containerView.bounds.midX - borderOffSet)
+    }
     private(set) var damping: CGFloat = 0.4
-    private(set) var frequency: CGFloat = 20
+    private(set) var frequency: CGFloat = 10
     private(set) var elasticity: CGFloat = 1.4
     private(set) var density: CGFloat = 10
+    private(set) var innerDamping: CGFloat = 0.1
+    private(set) var innerFrequency: CGFloat = 5
+    private(set) var innerElasticity: CGFloat = 1.4
+    private(set) var innerDensity: CGFloat = 10
     private(set) var containerView: UIView!
     private(set) var animator: UIDynamicAnimator!
     private(set) var centerView: UIView!
@@ -49,11 +58,15 @@ class BubbleView: UIView {
         self.stopAnimating()
         super.removeFromSuperview()
     }
-    init(frame: CGRect, damping:CGFloat, elasticity:CGFloat, density:CGFloat, frequency: CGFloat) {
+    init(frame: CGRect, damping:CGFloat, elasticity:CGFloat, density:CGFloat, frequency: CGFloat, innerDamping:CGFloat, innerElasticity:CGFloat, innerDensity:CGFloat, innerFrequency: CGFloat) {
         self.damping = damping
         self.elasticity = elasticity
         self.density = density
         self.frequency = frequency
+        self.innerDamping = innerDamping
+        self.innerElasticity = innerElasticity
+        self.innerDensity = innerDensity
+        self.innerFrequency = innerFrequency
         super.init(frame: frame)
     }
     
@@ -63,12 +76,10 @@ class BubbleView: UIView {
         // crea i nodi delle view
         setupViews()
         // aggiungi i behaviour
-        addAttachmentBehavior()
-//        // disegna il bordo
-//        modifyShapeLayer()
+        addBehavior()
     }
     func createContainerView() {
-        let insets = UIEdgeInsets(top: 20, left: 20, bottom: 20, right: 20)
+        let insets = UIEdgeInsets(top: 2, left: 2, bottom: 2, right: 2)
         containerView = UIView(frame: UIEdgeInsetsInsetRect(bounds, insets))
         containerView.autoresizingMask = .FlexibleWidth | .FlexibleHeight
         containerView.backgroundColor = UIColor.redColor()
@@ -76,7 +87,7 @@ class BubbleView: UIView {
     }
     func createControlPointView(coordinates:CGPoint) -> UIView {
         let controlPointView = UIView(frame: CGRect(x: 0, y: 0, width: viewSize, height: viewSize))
-        controlPointView.backgroundColor = UIColor.yellowColor()
+        controlPointView.backgroundColor = debugMode ?  UIColor.yellowColor() : UIColor.clearColor()
         controlPointView.center = coordinates
         containerView.addSubview(controlPointView)
         circumferenceViews.append(controlPointView)
@@ -84,7 +95,7 @@ class BubbleView: UIView {
     }
     func createArcView(coordinates:CGPoint)->UIView {
         let arcView = UIView(frame: CGRect(x: 0, y: 0, width: viewSize, height: viewSize))
-        arcView.backgroundColor = UIColor.blueColor()
+        arcView.backgroundColor = debugMode ?  UIColor.blueColor() : UIColor.clearColor()
         arcView.center = coordinates
         containerView.addSubview(arcView)
         circumferenceViews.append(arcView)
@@ -93,7 +104,6 @@ class BubbleView: UIView {
     
     func setupViews() {
         let center = CGPoint(x: containerView.bounds.midX, y: containerView.bounds.midY)
-        let radius = CGFloat(containerView.bounds.midX)
         //TODO: devo lavorare sui punti di controllo non su quelli di connessione, sono 8 archi, ogni arco ha 2 pti di controllo
         var progressiveAngle:CGFloat = 0
         let angleStep = CGFloat(M_PI * 2) / CGFloat((numberOfNodes-1)/2)
@@ -108,20 +118,20 @@ class BubbleView: UIView {
         let ctrView = UIView(frame: CGRect(x:0,y:0, width: viewSize, height: viewSize))
         ctrView.center = center
         ctrView.tag = tagDelta + numberOfNodes - 1
-        ctrView.backgroundColor = UIColor.yellowColor()
+        ctrView.backgroundColor = debugMode ?  UIColor.yellowColor() : UIColor.clearColor()
         containerView.addSubview(ctrView)
         centerView = ctrView
         
     }
     
-    func addAttachmentBehavior() {
+    func addBehavior() {
         animator = UIDynamicAnimator(referenceView: containerView)
         //Connect center to all the other view
         println("\(circumferenceViews)")
         for circView in circumferenceViews {
             let attachBeh = UIAttachmentBehavior(item: circView , attachedToItem: centerView)
-            attachBeh.damping = damping
-            attachBeh.frequency = frequency
+            attachBeh.damping = innerDamping
+            attachBeh.frequency = innerFrequency
             animator.addBehavior(attachBeh)
 
             let dynBh = UIDynamicItemBehavior(items: [circView]);
@@ -151,8 +161,13 @@ class BubbleView: UIView {
        
         let centerBeh = UIDynamicItemBehavior(items: [centerView])
         centerBeh.allowsRotation = false
+        centerBeh.density = innerDensity
+        centerBeh.elasticity = innerElasticity
         animator.addBehavior(centerBeh)
         
+        let collision = UICollisionBehavior(items: circumferenceViews)
+        collision.translatesReferenceBoundsIntoBoundary = true;
+        animator.addBehavior(collision)
     }
     
     func modifyShapeLayer() {
@@ -168,7 +183,6 @@ class BubbleView: UIView {
     func drawInterpolation() -> UIBezierPath {
         let bezierPath = UIBezierPath()
         bezierPath.lineWidth = 4.0
-        let radius = CGFloat(containerView.bounds.midX)
 
         let lastView = coordinatesArray.last!.arcEndView
         bezierPath.moveToPoint(lastView.center)
@@ -227,7 +241,7 @@ class BubbleView: UIView {
             println(" RandomX \(randomX) RandomY \(randomY)")
             let push = UIPushBehavior(items: [view], mode: .Instantaneous)
             push.pushDirection = CGVector(dx: randomX, dy: randomY)
-            push.magnitude = (CGFloat(arc4random()) /  CGFloat(UInt32.max) - 0.5) / 100
+            push.magnitude = (CGFloat(arc4random()) /  CGFloat(UInt32.max) - 0.5) / 10
             push.active = true
             animator.addBehavior(push)
         }
@@ -246,7 +260,7 @@ class BubbleView: UIView {
         
         // Perturbation timer
         if perturbationTimer == nil {
-            perturbationTimer = NSTimer.scheduledTimerWithTimeInterval(1, target: self, selector: Selector("perturbation"), userInfo: nil, repeats: true)
+            perturbationTimer = NSTimer.scheduledTimerWithTimeInterval(2, target: self, selector: Selector("perturbation"), userInfo: nil, repeats: true)
             perturbationTimer!.fire()
         }
 
