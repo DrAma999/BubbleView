@@ -11,28 +11,31 @@ let viewSize = 10
 let tagDelta = 555
 
 class BubbleView: UIView {
-    let numberOfNodes: Int = 17
-    let damping: CGFloat = 0.4
-    let frequency: CGFloat = 40
-    let elasticity: CGFloat = 1.4
-    let density: CGFloat = 10
-
-    lazy var shapeLayer: CAShapeLayer = {
+    
+    var viewFillColor = UIColor.yellowColor()
+    var viewBorderColor = UIColor.clearColor()
+    var viewBorderWidth: CGFloat?
+    
+    private(set) var damping: CGFloat = 0.4
+    private(set) var frequency: CGFloat = 20
+    private(set) var elasticity: CGFloat = 1.4
+    private(set) var density: CGFloat = 10
+    private(set) var containerView: UIView!
+    private(set) var animator: UIDynamicAnimator!
+    private(set) var centerView: UIView!
+    private(set) var circumferenceViews = [UIView]()
+    private(set) var coordinatesArray: [(firstControlView:UIView, secondControlView:UIView, arcEndView:UIView)] = []
+    
+    private var numberOfNodes: Int = 17
+    private var dispLink: CADisplayLink?
+    private var perturbationTimer: NSTimer?
+    private lazy var shapeLayer: CAShapeLayer = {
         let layer = CAShapeLayer()
-        layer.fillColor = self.backgroundColor?.CGColor
         self.containerView.layer.addSublayer(layer)
         return layer
-    }()
+        }()
     
-    var containerView: UIView!
-    var animator: UIDynamicAnimator!
-    var centerView: UIView!
-    var circumferenceViews = [UIView]()
-//    var coordinatesArray: [(firstControlView:UIView, secondControlView:UIView, arcStartPoint:CGPoint, arcEndPoint:CGPoint)] = []
-    var coordinatesArray: [(firstControlView:UIView, secondControlView:UIView, arcEndView:UIView)] = []
 
-    var dispLink: CADisplayLink?
-    
     required init(coder aDecoder: NSCoder) {
         super.init(coder: aDecoder)
         commonInit()
@@ -46,7 +49,13 @@ class BubbleView: UIView {
         self.stopAnimating()
         super.removeFromSuperview()
     }
-    
+    init(frame: CGRect, damping:CGFloat, elasticity:CGFloat, density:CGFloat, frequency: CGFloat) {
+        self.damping = damping
+        self.elasticity = elasticity
+        self.density = density
+        self.frequency = frequency
+        super.init(frame: frame)
+    }
     
     func commonInit() {
         // add containerView and constraints
@@ -110,11 +119,11 @@ class BubbleView: UIView {
         //Connect center to all the other view
         println("\(circumferenceViews)")
         for circView in circumferenceViews {
-//            let attachBeh = UIAttachmentBehavior(item: circView , attachedToItem: centerView)
-//            attachBeh.damping = damping
-//            attachBeh.frequency = frequency
-//            animator.addBehavior(attachBeh)
-//            
+            let attachBeh = UIAttachmentBehavior(item: circView , attachedToItem: centerView)
+            attachBeh.damping = damping
+            attachBeh.frequency = frequency
+            animator.addBehavior(attachBeh)
+
             let dynBh = UIDynamicItemBehavior(items: [circView]);
             dynBh.elasticity = elasticity;
             dynBh.density = density;
@@ -147,6 +156,12 @@ class BubbleView: UIView {
     }
     
     func modifyShapeLayer() {
+        shapeLayer.fillColor = viewFillColor.CGColor
+        if let border = viewBorderWidth where viewBorderWidth != 0{
+            shapeLayer.borderColor = viewBorderColor.CGColor
+            shapeLayer.borderWidth = border
+        }
+        
         shapeLayer.path = self.drawInterpolation().CGPath
     }
     
@@ -205,7 +220,7 @@ class BubbleView: UIView {
         return point
     }
     
-    func startAnimation() {
+    func perturbation() {
         for view in circumferenceViews {
             let randomX = CGFloat(arc4random()) /  CGFloat(UInt32.max) - 0.5
             let randomY = CGFloat(arc4random()) /  CGFloat(UInt32.max) - 0.5
@@ -216,6 +231,10 @@ class BubbleView: UIView {
             push.active = true
             animator.addBehavior(push)
         }
+    }
+    
+    func startAnimation() {
+//        perturbation()
         if let link = dispLink {
             link.invalidate()
             dispLink = nil;
@@ -224,12 +243,22 @@ class BubbleView: UIView {
             dispLink = CADisplayLink(target: self, selector:Selector("reDraw"))
             dispLink!.addToRunLoop(NSRunLoop.currentRunLoop(), forMode: NSRunLoopCommonModes)
         }
+        
+        // Perturbation timer
+        if perturbationTimer == nil {
+            perturbationTimer = NSTimer.scheduledTimerWithTimeInterval(1, target: self, selector: Selector("perturbation"), userInfo: nil, repeats: true)
+            perturbationTimer!.fire()
+        }
+
     }
     
     func stopAnimating() {
         if let link = dispLink {
             link.invalidate()
             dispLink = nil;
+        }
+        if let timer = perturbationTimer {
+            
         }
     }
     
